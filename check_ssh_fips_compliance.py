@@ -139,21 +139,21 @@ def verbose_host_output(host):
     for algo in host['noncompliant_ciphers']:
         output += ("    - "+algo+"\n")
 
-output += ("COMPLIANT HOSTS:\n")
+output += ("COMPLIANT HOSTS: ["+len(compliant_hosts)+"]\n")
 if compliant_hosts:
     for host in compliant_hosts: 
         output += ("- "+host['hostname']+"\n") 
         if verbose: verbose_host_output(host)
 else: output += "  [None]\n"
 
-output += ("NONCOMPLIANT HOSTS:\n")
+output += ("NONCOMPLIANT HOSTS: ["+len(noncompliant_hosts)+"]\n")
 if noncompliant_hosts:
     for host in noncompliant_hosts: 
         output += ("- "+host['hostname']+"\n")
         if verbose: verbose_host_output(host)
 else: output += "  [None]\n"
 
-output += ("UNREACHABLE HOSTS:\n")
+output += ("HOSTS NOT LISTENING ON 22: ["+len(bad_hosts)+"]\n")
 if bad_hosts:
     for host in bad_hosts:
         output += host + "\n"
