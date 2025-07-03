@@ -119,12 +119,45 @@ for host in hosts:
 
 # Output results
 output = ""
+
+def verbose_host_output(host):
+    global output
+    
+    output += "    Compliant Key Exchange Algorithms:\n"
+    for algo in host['compliant_kex']:
+        output += ("    - "+algo+"\n")
+    
+    output += "    Compliant Encryption Algorithms:\n"
+    for algo in host['compliant_ciphers']:
+        output += ("    - "+algo+"\n")
+
+    output += "    Noncompliant Key Exchange Algorithms:\n"
+    for algo in host['noncompliant_kex']:
+        output += ("    - "+algo+"\n")
+    
+    output += "    Noncompliant Encryption Algorithms:\n"
+    for algo in host['noncompliant_ciphers']:
+        output += ("    - "+algo+"\n")
+
 output += ("COMPLIANT HOSTS:\n")
-for host in compliant_hosts: 
-    output += (("- "+host['hostname']) if not verbose else ("- "+str(host))) + "\n"
+if compliant_hosts:
+    for host in compliant_hosts: 
+        output += ("- "+host['hostname']+"\n") 
+        if verbose: verbose_host_output(host)
+else: output += "  [None]\n"
+
 output += ("NONCOMPLIANT HOSTS:\n")
-for host in noncompliant_hosts: 
-    output += (("- "+host['hostname']) if not verbose else ("- "+str(host))) + "\n"
+if noncompliant_hosts:
+    for host in noncompliant_hosts: 
+        output += ("- "+host['hostname']+"\n")
+        if verbose: verbose_host_output(host)
+else: output += "  [None]\n"
+
+output += ("UNREACHABLE HOSTS:\n")
+if bad_hosts:
+    for host in bad_hosts:
+        output += host + "\n"
+else: output += "  [None]\n"
 
 print(output)
 if file_out:
