@@ -81,9 +81,16 @@ fips_enc_algos = [
 unresponsive_hosts = queried_hosts.copy() # initialize unresponsive hosts to a copy of the queried hosts list; remove them as we go through the responsive hosts to return a list of the unresponsive ones
 for host in hosts:
     host_data = {}
-
+    hostname =""
     # Get hostname of the given host
-    hostname = host_data['hostname'] = [hostname.get('name') for hostname in host.findall('./hostnames/hostname') if hostname.get('type') == "user"][0] 
+    hostnames = host.findall('./hostnames/hostname')
+    if hostnames:
+        hostname = [hostname.get('name') for hostname in hostnames if hostname.get('type') == "user"][0]
+    else: 
+        # No hostnames, IP only
+        hostname = [ip.get('addr') for ip in host.findall('./address') if ip.get('addrtype') == "ipv4"][0]
+
+    host_data['hostname'] = hostname
 
     # Host was found, so remove it from our unresponsive host list
     unresponsive_hosts.pop(unresponsive_hosts.index(hostname))
@@ -166,13 +173,13 @@ else: output += "  [None]\n"
 output += ("NON-SFTP HOSTS: ["+str(len(bad_hosts))+"]\n")
 if bad_hosts:
     for host in bad_hosts:
-        output += host + "\n"
+        output += host + "- \n"
 else: output += "  [None]\n"
 
 output += ("UNRESPONSIVE HOSTS: ["+str(len(unresponsive_hosts))+"]\n")
 if unresponsive_hosts:
     for host in unresponsive_hosts:
-        output += host + "\n"
+        output += host + "- \n"
 else: output += "  [None]\n"
 
 
