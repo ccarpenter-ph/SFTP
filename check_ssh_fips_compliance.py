@@ -32,7 +32,7 @@ output_path = args.output
 verbose = args.verbose # boolean
 
 # Create output file if output_path is defined.
-file_out = open(output_path, 'x') if output_path else None
+file_out = open(output_path, 'w') if output_path else None
 
 # Ensure nmap output directory exists, or create it
 ensure_nmap_out_dir = Path("nmap_out")
