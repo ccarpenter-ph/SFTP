@@ -8,9 +8,11 @@ from pathlib import Path
 # TODO: Add verbosity (create schema for storing host data, output more than hostname per compliant/noncompliant on -v)
 
 # Vars
-bad_hosts = []
-noncompliant_hosts = []
-compliant_hosts = []
+bad_hosts = [] # Hostname strings only
+queried_hosts = [] # Hostname strings only
+unresponsive_hosts = [] # Hostname strings only
+noncompliant_hosts = [] # Host objects
+compliant_hosts = [] # Host objects
 current_datetime = datetime.now()
 datetime_string = current_datetime.strftime("%Y%m%d-%H%M%S")
 
@@ -35,6 +37,10 @@ file_out = open(output_path, 'x') if output_path else None
 # Ensure nmap output directory exists, or create it
 ensure_nmap_out_dir = Path("nmap_out")
 ensure_nmap_out_dir.mkdir(parents=True, exist_ok=True)
+
+# Store list of hosts being queried from the input file, for cross-reference later. Also a good check to raise an error if the specified file doesn't exist
+with open(host_list_path) as file:
+    queried_hosts = [line.rstrip() for line in file]
 
 # Run Nmap and parse output xml file
 print("Running nmap...")
@@ -72,11 +78,15 @@ fips_enc_algos = [
     ]
 
 # Evaluate nmap output and compliance of each host
+unresponsive_hosts = queried_hosts.copy() # initialize unresponsive hosts to a copy of the queried hosts list; remove them as we go through the responsive hosts to return a list of the unresponsive ones
 for host in hosts:
     host_data = {}
 
     # Get hostname of the given host
     hostname = host_data['hostname'] = [hostname.get('name') for hostname in host.findall('./hostnames/hostname') if hostname.get('type') == "user"][0] 
+
+    # Host was found, so remove it from our unresponsive host list
+    unresponsive_hosts.pop(unresponsive_hosts.index(hostname))
 
     # Find listening SSH service on port 22
     ssh_port = [port for port in host.findall('./ports/port') if port.get('portid') == "22" and port.find('service').get('name') == "ssh" ]
@@ -139,25 +149,32 @@ def verbose_host_output(host):
     for algo in host['noncompliant_ciphers']:
         output += ("    - "+algo+"\n")
 
-output += ("COMPLIANT HOSTS: ["+len(compliant_hosts)+"]\n")
+output += ("COMPLIANT HOSTS: ["+str(len(compliant_hosts))+"]\n")
 if compliant_hosts:
     for host in compliant_hosts: 
         output += ("- "+host['hostname']+"\n") 
         if verbose: verbose_host_output(host)
 else: output += "  [None]\n"
 
-output += ("NONCOMPLIANT HOSTS: ["+len(noncompliant_hosts)+"]\n")
+output += ("NONCOMPLIANT HOSTS: ["+str(len(noncompliant_hosts))+"]\n")
 if noncompliant_hosts:
     for host in noncompliant_hosts: 
         output += ("- "+host['hostname']+"\n")
         if verbose: verbose_host_output(host)
 else: output += "  [None]\n"
 
-output += ("HOSTS NOT LISTENING ON 22: ["+len(bad_hosts)+"]\n")
+output += ("NON-SFTP HOSTS: ["+str(len(bad_hosts))+"]\n")
 if bad_hosts:
     for host in bad_hosts:
         output += host + "\n"
 else: output += "  [None]\n"
+
+output += ("UNRESPONSIVE HOSTS: ["+str(len(unresponsive_hosts))+"]\n")
+if unresponsive_hosts:
+    for host in unresponsive_hosts:
+        output += host + "\n"
+else: output += "  [None]\n"
+
 
 print(output)
 if file_out:
