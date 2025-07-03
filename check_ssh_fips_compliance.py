@@ -173,13 +173,13 @@ else: output += "  [None]\n"
 output += ("NON-SFTP HOSTS: ["+str(len(bad_hosts))+"]\n")
 if bad_hosts:
     for host in bad_hosts:
-        output += host + "- \n"
+        output += ("- "+host+"\n")
 else: output += "  [None]\n"
 
 output += ("UNRESPONSIVE HOSTS: ["+str(len(unresponsive_hosts))+"]\n")
 if unresponsive_hosts:
     for host in unresponsive_hosts:
-        output += host + "- \n"
+        output += ("- "+host+"\n")
 else: output += "  [None]\n"
 
 
