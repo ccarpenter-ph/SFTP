@@ -2,9 +2,7 @@ import xml.etree.ElementTree as ET
 import subprocess
 from datetime import datetime
 import argparse 
-
-# TODO: Wrap command into python script
-# TODO: Add verbosity (create schema for storing host data, output more than hostname per compliant/noncompliant on -v)
+import logging
 
 # Vars
 bad_hosts = []
@@ -21,12 +19,34 @@ ap.add_argument('host_list', type=str, help="Input file, a list of hosts in plai
 ap.add_argument('-o', '--output', type=str, help="File name to export results to.")
 ap.add_argument('-n', '--nmap', type=str, default="nmap/nmap.exe", help="Path to a local nmap installation. Defaults to ./nmap/nmap.exe.")
 ap.add_argument('-v', '--verbose', action='store_true', help="Increase verbosity of output.")
+ap.add_argument('-l', '--log', type=str, help="Path to store more verbose logging output from the script.")
 
 args = ap.parse_args()
 host_list_path = args.host_list
 nmap_path = args.nmap
 output_path = args.output
 verbose = args.verbose # boolean
+log_path = args.log
+
+# Config logger based on arguments
+log_config_args = {
+    'level':logging.DEBUG,
+    'format':'%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+    'datefmt':'%m-%d %H:%M'
+    }
+if log_path: log_config_args.update({
+    'filename':log_path,
+    'filemode':'x'
+})
+
+logging.basicConfig(log_config_args)
+
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(messaage)s')
+console.setFormatter(formatter)
+logging.getLogger().addHandler(console)
+
 
 # Create output file if args.output now, to catch errors early if it exists
 if output_path: file_out = open(output_path, 'x')
@@ -77,7 +97,7 @@ for host in hosts:
     ssh_port = [port for port in host.findall('./ports/port') if port.get('portid') == "22" and port.find('service').get('name') == "ssh" ]
     # Report any hosts that are NOT hosting SSH on this port for re-check
     if not ssh_port:
-        bad_hosts.append(host)
+        bad_hosts.append(hostname)
         continue
     else:
         # Select singleton item from list 
@@ -123,6 +143,7 @@ if file_out: file_out.write("\nNONCOMPLIANT HOSTS:")
 for host in noncompliant_hosts: 
     print("- "+host['hostname']) if not verbose else print("- "+str(host))
     if file_out: file_out.write("\n- "+host['hostname']) if not verbose else file_out.write("\n- "+str(host))
+print("UNRESPONSIVE HOSTS:")
 
 file_out.close()
 
