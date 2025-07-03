@@ -2,6 +2,7 @@ import xml.etree.ElementTree as ET
 import subprocess
 from datetime import datetime
 import argparse 
+from pathlib import Path
 
 # TODO: Wrap command into python script
 # TODO: Add verbosity (create schema for storing host data, output more than hostname per compliant/noncompliant on -v)
@@ -28,8 +29,12 @@ nmap_path = args.nmap
 output_path = args.output
 verbose = args.verbose # boolean
 
-# Create output file if args.output now, to catch errors early if it exists
-if output_path: file_out = open(output_path, 'x')
+# Create output file if output_path is defined.
+file_out = open(output_path, 'x') if output_path else None
+
+# Ensure nmap output directory exists, or create it
+ensure_nmap_out_dir = Path("nmap_out")
+ensure_nmap_out_dir.mkdir(parents=True, exist_ok=True)
 
 # Run Nmap and parse output xml file
 print("Running nmap...")
@@ -113,18 +118,18 @@ for host in hosts:
         noncompliant_hosts.append(host_data)
 
 # Output results
-print("COMPLIANT HOSTS:")
-if file_out: file_out.write("COMPLIANT HOSTS:")
+output = ""
+output += ("COMPLIANT HOSTS:\n")
 for host in compliant_hosts: 
-    print("- "+host['hostname']) if not verbose else print("- "+str(host))
-    if file_out:file_out.write("\n- "+host['hostname']) if not verbose else file_out.write("\n- "+str(host))
-print("NONCOMPLIANT HOSTS:")
-if file_out: file_out.write("\nNONCOMPLIANT HOSTS:")
+    output += (("- "+host['hostname']) if not verbose else ("- "+str(host))) + "\n"
+output += ("NONCOMPLIANT HOSTS:\n")
 for host in noncompliant_hosts: 
-    print("- "+host['hostname']) if not verbose else print("- "+str(host))
-    if file_out: file_out.write("\n- "+host['hostname']) if not verbose else file_out.write("\n- "+str(host))
+    output += (("- "+host['hostname']) if not verbose else ("- "+str(host))) + "\n"
 
-file_out.close()
+print(output)
+if file_out:
+    file_out.write(output)
+    file_out.close()
 
 
 
