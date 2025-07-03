@@ -82,7 +82,7 @@ for host in hosts:
     ssh_port = [port for port in host.findall('./ports/port') if port.get('portid') == "22" and port.find('service').get('name') == "ssh" ]
     # Report any hosts that are NOT hosting SSH on this port for re-check
     if not ssh_port:
-        bad_hosts.append(host)
+        bad_hosts.append(hostname)
         continue
     else:
         # Select singleton item from list 
@@ -122,7 +122,7 @@ output = ""
 
 def verbose_host_output(host):
     global output
-    
+
     output += "    Compliant Key Exchange Algorithms:\n"
     for algo in host['compliant_kex']:
         output += ("    - "+algo+"\n")
