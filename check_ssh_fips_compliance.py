@@ -72,6 +72,9 @@ fips_enc_algos = [
     "aes256-gcm@openssh.com",
     "aes256-ctr",
     "aes256-cbc",
+    "aes192-gcm@openssh.com",
+    "aes192-ctr",
+    "aes192-cbc",
     "aes128-gcm@openssh.com",
     "aes128-ctr",
     "aes128-cbc"
