@@ -45,7 +45,7 @@ with open(host_list_path) as file:
 # Run Nmap and parse output xml file
 print("Running nmap...")
 try:
-    result = subprocess.run([nmap_path, '--script', 'ssh2-enum-algos', '-iL', host_list_path, '-oX', 'nmap_out/'+datetime_string+'.xml'], capture_output=True, text=True, check=True)
+    result = subprocess.run([nmap_path, '--script', 'ssh2-enum-algos', '-iL', host_list_path, '-oX', 'nmap_out/'+datetime_string+'.xml', '-p', '22'], capture_output=True, text=True, check=True)
 except subprocess.CalledProcessError as err:
     print("Something went wrong while running nmap. Printing stderr...")
     print(err.stderr)
@@ -99,7 +99,7 @@ for host in hosts:
     unresponsive_hosts.pop(unresponsive_hosts.index(hostname))
 
     # Find listening SSH service on port 22
-    ssh_port = [port for port in host.findall('./ports/port') if port.get('portid') == "22" and port.find('service').get('name') == "ssh" ]
+    ssh_port = [port for port in host.findall('./ports/port') if port.get('portid') == "22" and port.find('state').get('state') == "open" ]
     # Report any hosts that are NOT hosting SSH on this port for re-check
     if not ssh_port:
         bad_hosts.append(hostname)
@@ -185,6 +185,12 @@ if unresponsive_hosts:
         output += ("- "+host+"\n")
 else: output += "  [None]\n"
 
+output += "\n\n===== SUMMARY =====\n"
+output += ("COMPLIANT HOSTS: ["+str(len(compliant_hosts))+"]\n")
+output += ("NONCOMPLIANT HOSTS: ["+str(len(noncompliant_hosts))+"]\n")
+output += ("NON-SFTP HOSTS: ["+str(len(bad_hosts))+"]\n")
+output += ("UNRESPONSIVE HOSTS: ["+str(len(unresponsive_hosts))+"]\n")
+output += ("TOTAL: ["+str(len(queried_hosts))+"]\n")
 
 print(output)
 if file_out:
